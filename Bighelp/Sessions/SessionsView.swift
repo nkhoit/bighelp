@@ -376,7 +376,7 @@ struct SessionsView: View {
     /// Agents with a running chat in the catalog. This is the only live signal
     /// the session summaries carry, so every other agent reads as idle.
     private func activeAgentIDs(_ model: SessionsModel) -> Set<String> {
-        Set(model.filteredSections.flatMap(\.sessions).filter(\.isActive).flatMap(\.agentIDs))
+        Set(model.matchingSummaries().filter(\.isActive).flatMap(\.agentIDs))
     }
 
     private func nativeFilterMenu(model: SessionsModel) -> some View {
@@ -643,14 +643,16 @@ struct SessionsView: View {
 
     @ViewBuilder
     private func nativeLoadedContent(model: SessionsModel) -> some View {
-        let unorderedSections = model.filteredSections(organizeByProjects: organizeByProjects)
+        let matching = model.matchingSummaries()
+        let unorderedSections = SessionSectionOrganizer.sections(from: matching, organizeByProjects: organizeByProjects)
         let availableProjectKeys = unorderedSections.map(\.key).filter(\.isReorderable)
         let layout = settings.sessionSectionLayout(
             accountID: sessionOrganizationAccountID,
             hostID: sessionOrganizationHostID,
             availableProjectKeys: availableProjectKeys
         )
-        let sections = model.filteredSections(
+        let sections = SessionSectionOrganizer.sections(
+            from: matching,
             organizeByProjects: organizeByProjects,
             projectOrder: layout.projectOrder
         )
@@ -1018,14 +1020,16 @@ struct SessionsView: View {
 
     @ViewBuilder
     private func loadedContent(model: SessionsModel) -> some View {
-        let unorderedSections = model.filteredSections(organizeByProjects: organizeByProjects)
+        let matching = model.matchingSummaries()
+        let unorderedSections = SessionSectionOrganizer.sections(from: matching, organizeByProjects: organizeByProjects)
         let availableProjectKeys = unorderedSections.map(\.key).filter(\.isReorderable)
         let layout = settings.sessionSectionLayout(
             accountID: sessionOrganizationAccountID,
             hostID: sessionOrganizationHostID,
             availableProjectKeys: availableProjectKeys
         )
-        let sections = model.filteredSections(
+        let sections = SessionSectionOrganizer.sections(
+            from: matching,
             organizeByProjects: organizeByProjects,
             projectOrder: layout.projectOrder
         )

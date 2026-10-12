@@ -314,20 +314,23 @@ final class SessionsModel {
         organizeByProjects: Bool,
         projectOrder: [SessionSectionKey] = []
     ) -> [SessionDaySection] {
-        // Retain and present by recent activity. The shared organizer preserves
-        // active/pinned priority and any explicit project ordering.
-        let matching = sourceRecords
+        // The shared organizer preserves active/pinned priority and any explicit project ordering.
+        SessionSectionOrganizer.sections(
+            from: matchingSummaries(),
+            organizeByProjects: organizeByProjects,
+            projectOrder: projectOrder
+        )
+    }
+
+    /// The chats the filters and search let through, by recent activity. A screen that
+    /// organizes them more than once reads this once: searching goes through every transcript.
+    func matchingSummaries() -> [SessionSummary] {
+        sourceRecords
             .filter { isVisible($0) && !$0.isSubagentSession && ($0.hasAcceptedMessage || $0.hasActiveWork) }
             .sorted(by: activitySort)
             .prefix(SessionCatalogStore.summaryRetentionLimit)
             .filter(matches)
             .map(\.summary)
-
-        return SessionSectionOrganizer.sections(
-            from: matching,
-            organizeByProjects: organizeByProjects,
-            projectOrder: projectOrder
-        )
     }
 
     var hasLoadedSessions: Bool {

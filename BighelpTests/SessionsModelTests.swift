@@ -66,6 +66,7 @@ struct SessionsModelTests {
         #expect(model.filteredSections.flatMap(\.sessions).map(\.id) == ["z", "a", "m"])
         model.query = "Find m"
         #expect(model.filteredSections.flatMap(\.sessions).map(\.id) == ["m"])
+        #expect(model.matchingSummaries().map(\.id) == ["m"])
     }
 
     @Test func sectionsUseRecencyAndSectionPriorityRules() {

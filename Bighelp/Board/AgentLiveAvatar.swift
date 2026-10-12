@@ -143,7 +143,7 @@ private struct ActivityMotion: ViewModifier {
 
     func body(content: Content) -> some View {
         if enabled, activity.isWorking {
-            TimelineView(.animation) { context in
+            TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
                 content
                     .scaleEffect(scale(t))

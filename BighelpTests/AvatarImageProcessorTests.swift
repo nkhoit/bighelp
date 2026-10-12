@@ -175,6 +175,57 @@ private final class AvatarFileProtectionRecorder: BighelpLocalFileProtecting, @u
     }
 }
 
+@MainActor
+struct AvatarImageCacheTests {
+    @Test func pictureIsShrunkToItsCircleKeepingTheLongSidesShare() throws {
+        let url = try writeAvatarPNG(width: 2_000, height: 1_000, color: .systemOrange)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+
+        let image = try #require(AvatarImageCache.image(at: url, side: 44, scale: 3))
+
+        let cgImage = try #require(image.cgImage)
+        #expect(abs(cgImage.height - 132) <= 1)
+        #expect(abs(cgImage.width - 264) <= 1)
+    }
+
+    @Test func aNewPictureSavedUnderTheSameNameShows() throws {
+        let url = try writeAvatarPNG(width: 300, height: 300, color: .systemOrange)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+
+        let first = try #require(AvatarImageCache.image(at: url, side: 44, scale: 2))
+        #expect(AvatarImageCache.image(at: url, side: 44, scale: 2) === first)
+
+        _ = try writeAvatarPNG(width: 400, height: 200, color: .systemBlue, to: url)
+        let second = try #require(AvatarImageCache.image(at: url, side: 44, scale: 2))
+
+        #expect(second !== first)
+        #expect(abs((second.cgImage?.width ?? 0) - 176) <= 1)
+    }
+
+    @Test func missingFileHasNoPicture() {
+        let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).png")
+        #expect(AvatarImageCache.image(at: url, side: 44, scale: 2) == nil)
+    }
+}
+
+@discardableResult
+private func writeAvatarPNG(width: CGFloat, height: CGFloat, color: UIColor, to url: URL? = nil) throws -> URL {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    let size = CGSize(width: width, height: height)
+    let data = UIGraphicsImageRenderer(size: size, format: format).pngData { context in
+        color.setFill()
+        context.fill(CGRect(origin: .zero, size: size))
+    }
+    let target = url ?? FileManager.default.temporaryDirectory
+        .appending(path: "BighelpAvatarCacheTests")
+        .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        .appending(path: "avatar.png")
+    try FileManager.default.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try data.write(to: target)
+    return target
+}
+
 private final class TestProtectedDataAvailability: BighelpProtectedDataAvailabilityProviding, @unchecked Sendable {
     var isProtectedDataAvailable: Bool
 

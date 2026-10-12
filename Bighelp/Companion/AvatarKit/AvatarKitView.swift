@@ -18,7 +18,9 @@ struct AvatarKitView: View {
 
     var body: some View {
         if isAnimating {
-            TimelineView(.animation) { timeline in
+            // 30 a second, like the app's other ambient motion: the whole character is
+            // redrawn each frame on the main thread, beside a streaming chat.
+            TimelineView(.animation(minimumInterval: 1.0 / 30)) { timeline in
                 canvas(time: timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600))
             }
         } else {
